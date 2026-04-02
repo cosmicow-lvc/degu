@@ -1,0 +1,96 @@
+services:
+  # ----------------------------------------
+  # DATABASE: PostgreSQL
+  # ----------------------------------------
+  database:
+    image: postgres:15-alpine
+    container_name: app_database
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  # ----------------------------------------
+  # BACKEND: Node + Prisma
+  # ----------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: app_backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}"
+    volumes:
+      # Hot Reloading: sincroniza tu código local con el contenedor
+      - ./backend:/app
+      # Protege los node_modules del contenedor
+      - /app/node_modules
+      - /app/Database/node_modules
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - app_network
+    command: sh -c "cd Database && npx prisma migrate dev --name init && cd .. && npm run dev"
+
+  # ----------------------------------------
+  # FRONTEND: Vite
+  # ----------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: app_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    environment:
+      - VITE_API_URL=http://localhost:${BACKEND_PORT}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+  # ----------------------------------------
+  # HERRAMIENTAS: PgAdmin (Opcional)
+  # ----------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: app_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@app.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - database
+    networks:
+      - app_network
+    profiles:
+      - tools
+
+volumes:
+  db_data:
+
+networks:
+  app_network:
+    driver: bridge

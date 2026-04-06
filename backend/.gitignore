@@ -1,0 +1,33 @@
+# --- Dependencias ---
+node_modules/
+jspm_packages/
+package-lock.json
+
+# --- Compilación (TypeScript/Builds) ---
+dist/
+lib/
+out/
+tsconfig.tsbuildinfo
+*.ts.buildapi
+
+# --- Logs ---
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Testing (Jest) ---
+coverage/
+*.lcov
+
+# --- IDEs / Editores ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# --- Otros ---
+temp/
+tmp/

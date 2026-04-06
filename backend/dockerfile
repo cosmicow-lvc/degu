@@ -16,4 +16,4 @@ COPY . .
 EXPOSE 3000
 
 # CMD para desarrollo
-CMD ["ts-node-dev", "--respawn", "--transpile-only", "src/main.ts"]
+CMD ["ts-node-dev", "--respawn", "--transpile-only", "src/index.ts"]

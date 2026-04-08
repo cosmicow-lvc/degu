@@ -1,6 +1,5 @@
 
 import type { JSX } from "react/jsx-dev-runtime"
-import "../App.css"
 
 export default function Login(): JSX.Element {
   return (

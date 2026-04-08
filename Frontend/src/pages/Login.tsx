@@ -50,6 +50,22 @@ export default function Login(): JSX.Element {
             Restaurarla
           </a>
         </p>
+        <div className="mt-6">
+        {/* Separador */}
+        <div className="flex items-center gap-4 mb-4">
+            <div className="h-px flex-1 bg-slate-200"></div>
+            <span className="text-sm text-slate-400">O continuar con correo</span>
+            <div className="h-px flex-1 bg-slate-200"></div>
+        </div>
+
+        {/* Botón */}
+        <button
+            type="button"
+            className="w-full rounded-2xl bg-slate-950 text-white border border-slate-200 py-3 font-medium hover:bg-slate-800 transition"
+        >
+            Acceder con correo
+        </button>
+        </div>
       </section>
     </main>
   )

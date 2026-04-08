@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import ListaTalleres from './components/listaTalleres';
-import FormularioAsistencia from './components/FormularioAsistencia';
+import FormularioAsistencia from './components/formularioAsistencia';
 import './App.css';
 
 const Inicio = () => (

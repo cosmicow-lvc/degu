@@ -1,18 +1,2 @@
 @import "tailwindcss"
 
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  overscroll-behavior: none;
-}
-
-body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-button, a {
-  @apply transition-all duration-200 ease-in-out;
-}

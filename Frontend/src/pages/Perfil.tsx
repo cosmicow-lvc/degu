@@ -7,7 +7,7 @@ interface TallerHistorico {
   nombre: string
   semestre: string
   asistencia: number
-  estado: "Aprobado" | "Regular" | "Bajo"
+  estado: "Calificado" | "No califica"
 }
 
 const estudiante = {
@@ -22,10 +22,10 @@ const estudiante = {
 }
 
 const historialTalleres: TallerHistorico[] = [
-  { id: 1, codigo: "TALL-001", nombre: "Teatro", semestre: "2025-1", asistencia: 92, estado: "Aprobado" },
-  { id: 2, codigo: "TALL-002", nombre: "Danza Contemporánea", semestre: "2025-2", asistencia: 78, estado: "Regular" },
-  { id: 3, codigo: "TALL-003", nombre: "Pintura", semestre: "2024-2", asistencia: 61, estado: "Regular" },
-  { id: 4, codigo: "TALL-004", nombre: "Música Andina", semestre: "2024-1", asistencia: 95, estado: "Aprobado" },
+  { id: 1, codigo: "TALL-001", nombre: "Teatro", semestre: "2025-1", asistencia: 92, estado: "Calificado" },
+  { id: 2, codigo: "TALL-002", nombre: "Danza Contemporánea", semestre: "2025-2", asistencia: 78, estado: "No califica" },
+  { id: 3, codigo: "TALL-003", nombre: "Pintura", semestre: "2024-2", asistencia: 61, estado: "No califica" },
+  { id: 4, codigo: "TALL-004", nombre: "Música Andina", semestre: "2024-1", asistencia: 95, estado: "Calificado" },
 ]
 
 function colorAsistencia(asistencia: number): string {
@@ -35,8 +35,8 @@ function colorAsistencia(asistencia: number): string {
 }
 
 function colorEstado(estado: TallerHistorico["estado"]): string {
-  if (estado === "Aprobado") return "bg-emerald-100 text-emerald-700 border border-emerald-200"
-  if (estado === "Regular") return "bg-amber-100 text-amber-700 border border-amber-200"
+  if (estado === "Calificado") return "bg-emerald-100 text-emerald-700 border border-emerald-200"
+  if (estado === "No califica") return "bg-amber-100 text-amber-700 border border-amber-200"
   return "bg-rose-100 text-rose-700 border border-rose-200"
 }
 

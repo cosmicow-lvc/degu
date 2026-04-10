@@ -1,6 +1,5 @@
 
 import type { JSX } from "react/jsx-dev-runtime"
-import "../App.css"
 
 export default function Login(): JSX.Element {
   return (
@@ -44,12 +43,7 @@ export default function Login(): JSX.Element {
           </div>
         </form>
 
-        <p className="mt-8 text-center text-sm text-slate-500">
-          ¿Olvidaste tu contraseña?{' '}
-          <a href="#" className="font-semibold text-slate-900 hover:underline">
-            Restaurarla
-          </a>
-        </p>
+
         <div className="mt-6">
         {/* Separador */}
         <div className="flex items-center gap-4 mb-4">
@@ -65,6 +59,21 @@ export default function Login(): JSX.Element {
         >
             Acceder con correo
         </button>
+        </div>
+       <div className="mt-8 grid grid-cols-2 text-sm text-slate-400">
+          <p className="text-left">
+            ¿Olvidaste tu contraseña?{' '}
+            <a className="text-slate-900 font-medium hover:underline">
+              Restaurar
+            </a>
+          </p>
+
+          <p className="text-right">
+            ¿No tienes cuenta?{' '}
+            <a href="/registro" className="text-slate-900 font-medium hover:underline">
+              Registrarte
+            </a>
+          </p>
         </div>
       </section>
     </main>

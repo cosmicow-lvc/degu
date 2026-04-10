@@ -1,0 +1,80 @@
+.malla {
+    --label-col: 82px;
+    display: grid;
+    grid-template-columns: var(--label-col) repeat(6, minmax(110px, 1fr));
+    gap: 8px;
+    width: min(100%, 1040px);
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.92));
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+}
+
+.celda {
+    min-height: 64px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    font-weight: 600;
+    user-select: none;
+}
+
+.esquina {
+    background: linear-gradient(135deg, rgba(170, 59, 255, 0.2), rgba(170, 59, 255, 0.05));
+    border-color: var(--accent-border);
+}
+
+.encabezado-dia {
+    color: var(--text-h);
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    background: linear-gradient(180deg, var(--accent-bg), rgba(170, 59, 255, 0.03));
+    border-color: var(--accent-border);
+}
+
+.encabezado-bloque {
+    color: var(--text-h);
+    font-size: 0.95rem;
+    background: linear-gradient(180deg, rgba(170, 59, 255, 0.16), rgba(170, 59, 255, 0.06));
+    border-color: var(--accent-border);
+}
+
+.contenido {
+    background: rgba(255, 255, 255, 0.75);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.contenido:hover {
+    border-color: var(--accent-border);
+    box-shadow: 0 10px 18px -13px rgba(170, 59, 255, 0.9);
+    transform: translateY(-1px);
+}
+
+@media (prefers-color-scheme: dark) {
+    .malla {
+        background: linear-gradient(180deg, rgba(35, 36, 44, 0.7), rgba(18, 19, 26, 0.92));
+    }
+
+    .contenido {
+        background: rgba(40, 41, 53, 0.7);
+    }
+}
+
+@media (max-width: 920px) {
+    .malla {
+        --label-col: 64px;
+        gap: 6px;
+        padding: 10px;
+        overflow-x: auto;
+    }
+
+    .celda {
+        min-height: 52px;
+        font-size: 0.8rem;
+    }
+}

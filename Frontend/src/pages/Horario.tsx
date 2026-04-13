@@ -6,52 +6,84 @@ interface Taller {
   dia: number
   bloque: number
   titulo: string
+  lugar: string
 }
 
 const talleres: Array<Taller> = [
-  { dia: 1, bloque: 3, titulo: "Danza" },
-  { dia: 1, bloque: 3, titulo: "Teatro" },
-  { dia: 4, bloque: 5, titulo: "Danza" },
-  { dia: 3, bloque: 1, titulo: "Musica" },
-  { dia: 6, bloque: 3, titulo: "Pintura" },
+  { dia: 1, bloque: 3, titulo: "Club TCG", lugar: "Sala J" },
+  { dia: 1, bloque: 4, titulo: "Club TCG", lugar: "Sala J" },
+  { dia: 1, bloque: 4, titulo: "Cueca", lugar: "Gimnasio" },
+  { dia: 1, bloque: 5, titulo: "Club TCG", lugar: "Sala J" },
+  { dia: 1, bloque: 5, titulo: "Bandas", lugar: "Sala multiusos" },
+  { dia: 1, bloque: 6, titulo: "Pole Dance", lugar: "Gimnasio" },
+  { dia: 2, bloque: 3, titulo: "Club TCG", lugar: "Sala J" },
+  { dia: 2, bloque: 3, titulo: "Club Gamer", lugar: "Sala multiusos" },
+  { dia: 2, bloque: 4, titulo: "Club TCG", lugar: "Sala J" },
+  { dia: 2, bloque: 4, titulo: "Club Gamer", lugar: "Sala multiusos" },
+  { dia: 2, bloque: 4, titulo: "Cueca", lugar: "Gimnasio" },
+  { dia: 2, bloque: 5, titulo: "Club TCG", lugar: "Sala J" },
+  { dia: 2, bloque: 5, titulo: "Club Gamer", lugar: "Sala multiusos" },
+  { dia: 2, bloque: 6, titulo: "Jazz Band", lugar: "Sala de Música" },
+  { dia: 3, bloque: 1, titulo: "Pintura", lugar: "Taller de Arte" },
+  { dia: 3, bloque: 2, titulo: "Pintura", lugar: "Taller de Arte" },
+  { dia: 3, bloque: 2, titulo: "Canto", lugar: "Sala multiusos" },
+  { dia: 3, bloque: 2, titulo: "Danza", lugar: "Sala de Música" },
+  { dia: 3, bloque: 3, titulo: "Pintura", lugar: "Taller de Arte" },
+  { dia: 3, bloque: 3, titulo: "Canto", lugar: "Sala multiusos" },
+  { dia: 3, bloque: 4, titulo: "Danza", lugar: "Sala de Música" },
+  { dia: 3, bloque: 4, titulo: "Teatro", lugar: "Sala multiusos" },
+  { dia: 3, bloque: 6, titulo: "Música", lugar: "Sala de Música" },
+  { dia: 3, bloque: 7, titulo: "Música", lugar: "Sala de Música" },
+  { dia: 4, bloque: 2, titulo: "Club de literatura", lugar: "Sala de Música" },
+  { dia: 4, bloque: 2, titulo: "Fotografía", lugar: "Exterior" },
+  { dia: 4, bloque: 3, titulo: "Fotografía", lugar: "Exterior" },
+  { dia: 4, bloque: 4, titulo: "Teatro", lugar: "Sala multiusos" },
+  { dia: 4, bloque: 4, titulo: "Club TCG", lugar: "Sala J" },
+  { dia: 4, bloque: 6, titulo: "Pole Dance", lugar: "Gimnasio" },
+  { dia: 5, bloque: 4, titulo: "Club TCG", lugar: "Sala J" },
+  { dia: 5, bloque: 5, titulo: "Jazz Band", lugar: "Sala de Música" },
+  { dia: 5, bloque: 5, titulo: "Bandas", lugar: "Sala multiusos" }
 ]
 
 export default function Horario(): ReactElement {
   const dias = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"]
   const bloques = ["A", "B", "C", "C2", "D", "E", "F", "G"]
 
-  const talleresPorCelda = useMemo(() => {
-    const map = new Map<string, Taller[]>()
+  const lugares = useMemo(
+    () => Array.from(new Set(talleres.map((t) => t.lugar))).sort(),
+    []
+  )
 
-    for (const taller of talleres) {
-      if (taller.bloque <= 0 || taller.dia <= 0) continue
+  // Por defecto: todos seleccionados
+  const [lugaresActivos, setLugaresActivos] = useState<string[]>(lugares)
+
+  const toggleLugar = (lugar: string) => {
+    setLugaresActivos((prev) =>
+      prev.includes(lugar) ? prev.filter((x) => x !== lugar) : [...prev, lugar]
+    )
+  }
+
+  const talleresFiltrados = useMemo(
+    () =>
+      talleres.filter(
+        (t) => t.bloque > 0 && t.dia > 0 && lugaresActivos.includes(t.lugar)
+      ),
+    [lugaresActivos]
+  )
+
+  const talleresPorCelda = useMemo(() => {
+    const map = new Map<string, Taller[]>();
+    for (const taller of talleresFiltrados) {
       const key = `${taller.bloque}-${taller.dia}`
       const prev = map.get(key) ?? []
       prev.push(taller)
       map.set(key, prev)
     }
-
     return map
-  }, [])
+  }, [talleresFiltrados])
 
-  const [seleccion, setSeleccion] = useState<{ bloque: number; dia: number } | null>(null)
-  const [busqueda, setBusqueda] = useState("")
-
-  const talleresSeleccionados = useMemo(() => {
-    if (!seleccion) return []
-    return talleresPorCelda.get(`${seleccion.bloque}-${seleccion.dia}`) ?? []
-  }, [seleccion, talleresPorCelda])
-
-  const talleresFuentePanel = useMemo(() => {
-    if (seleccion) return talleresSeleccionados
-    return talleres.filter((t) => t.bloque > 0 && t.dia > 0)
-  }, [seleccion, talleresSeleccionados])
-
-  const talleresFiltradosPanel = useMemo(() => {
-    const q = busqueda.trim().toLowerCase()
-    if (!q) return talleresFuentePanel
-    return talleresFuentePanel.filter((t) => t.titulo.toLowerCase().includes(q))
-  }, [talleresFuentePanel, busqueda])
+  const seleccionarTodos = () => setLugaresActivos(lugares)
+  const limpiarTodos = () => setLugaresActivos([])
 
   return (
     <section id="center">
@@ -74,24 +106,24 @@ export default function Horario(): ReactElement {
                 const diaNum = diaIndex + 1
                 const key = `${bloqueNum}-${diaNum}`
                 const items = talleresPorCelda.get(key) ?? []
-                const cantidad = items.length
-                const activa = seleccion?.bloque === bloqueNum && seleccion?.dia === diaNum
 
                 return (
-                  <button
-                    type="button"
+                  <div
                     key={`celda-${bloque}-${dia}`}
-                    className={`celda contenido celda-click ${cantidad > 0 ? "con-taller" : ""} ${activa ? "activa" : ""}`}
-                    onClick={() =>
-                      setSeleccion((prev) =>
-                        prev?.bloque === bloqueNum && prev?.dia === diaNum
-                          ? null
-                          : { bloque: bloqueNum, dia: diaNum }
-                      )
-                    }
+                    className={`celda contenido ${items.length > 0 ? "con-taller" : ""}`}
                   >
-                    {cantidad > 0 ? cantidad : ""}
-                  </button>
+                    <div className="contenido-lista">
+                      {items.map((t, idx) => (
+                        <span
+                          key={`${t.titulo}-${t.lugar}-${idx}`}
+                          className="contenido-item"
+                          title={`${t.titulo} · ${t.lugar}`}
+                        >
+                          {t.titulo}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )
               })}
             </Fragment>
@@ -99,40 +131,34 @@ export default function Horario(): ReactElement {
         </div>
 
         <aside className="panel-detalle">
-          <h3>Detalle</h3>
+          <div className="panel-header">
+            <h3>Filtros</h3>
+          </div>
+          <div className="panel-acciones">
+            <button type="button" className="panel-btn" onClick={seleccionarTodos}>
+              Seleccionar todos
+            </button>
+            <button type="button" className="panel-btn panel-btn-sec" onClick={limpiarTodos}>
+              Limpiar
+            </button>
+          </div>
 
-          <input
-            className="panel-busqueda"
-            type="text"
-            placeholder="Buscar taller..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
+          <div className="panel-lista">
+            {lugares.map((lugar) => {
+              const checked = lugaresActivos.includes(lugar)
 
-          {!seleccion && <p className="panel-meta">Mostrando todos los talleres</p>}
-
-          {seleccion && (
-            <p className="panel-meta">
-              Bloque {bloques[seleccion.bloque - 1]} · {dias[seleccion.dia - 1]}
-            </p>
-          )}
-
-          <p className="panel-total">Total: {talleresFiltradosPanel.length}</p>
-
-          {talleresFiltradosPanel.length === 0 && <p>No se encontraron talleres.</p>}
-
-          {talleresFiltradosPanel.length > 0 && (
-            <div className="panel-lista">
-              {talleresFiltradosPanel.map((taller, idx) => (
-                <article key={`${taller.titulo}-${taller.bloque}-${taller.dia}-${idx}`} className="panel-card">
-                  <div className="panel-card-titulo">{taller.titulo}</div>
-                  <div className="panel-card-meta">
-                    Bloque {bloques[taller.bloque - 1]} · {dias[taller.dia - 1]}
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+              return (
+                <label key={lugar} className={`panel-check ${checked ? "panel-check-activo" : ""}`}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleLugar(lugar)}
+                  />
+                  <span className="panel-check-texto">{lugar}</span>
+                </label>
+              )
+            })}
+          </div>
         </aside>
       </div>
     </section>

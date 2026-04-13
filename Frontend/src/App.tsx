@@ -5,6 +5,7 @@ import Inicio from './pages/Inicio';
 import Horario from './pages/Horario'
 import Perfil from './pages/Perfil'
 import './App.css';
+import Login from './pages/Login';
 
 
 
@@ -16,6 +17,7 @@ function App() {
       <Route path='/talleres' element={<ListaTalleres />} />
       <Route path='/horario' element={<Horario />} />
       <Route path='/perfil' element={<Perfil />} />
+      <Route path='/login' element={<Login />} />
       <Route path="*" element={<div className="p-10 text-center text-red-500">Página no encontrada (Error 404)</div>} />
     </Routes>
   );

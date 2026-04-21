@@ -12,19 +12,86 @@ datasource db {
   provider = "postgresql"
 }
 
-//aqui iria los modelos de la base de datos, ejemplo 
+enum RolUsuario {
+  Administrador
+  Profesor
+  Ayudante
+  Estudiante
+}
 
-model User { 
+enum BloqueHorario {
+  A 
+  B  
+  C  
+  D  
+  E 
+  F 
+}
+
+model Usuario { 
   id    Int     @id @default(autoincrement()) 
-  email String  @unique
-  name  String?
-  posts Post[]
+  nombre    String
+  apellido  String
+  rut       String     @unique
+  correo    String     @unique
+  password  String
+  rol       RolUsuario @default(ESTUDIANTE)
+
+  talleresDictados Taller[]      @relation("ProfesorTaller")
+  inscripciones    Inscripcion[]
+  asistencias      Asistencia[]
 } 
-model Post { 
-  id        Int     @id @default(autoincrement()) 
-  title     String
-  content   String?
-  published Boolean @default(false) 
-  author    User    @relation(fields: [authorId], references: [id]) 
-  authorId  Int
-} 
+
+model Taller {
+  id          Int     @id @default(autoincrement())
+  nombre      String
+  descripcion String  @db.Text
+  horario     String
+  semestre    String
+  estado      Boolean @default(true)
+
+  profesorId    Int
+  profesor      Usuario       @relation("ProfesorTaller", fields: [profesorId], references: [id])
+  inscripciones Inscripcion[]
+  sesiones      Sesion[]
+}
+
+model Inscripcion {
+  id            Int      @id @default(autoincrement())
+  fechaRegistro DateTime @default(now())
+
+  estudianteId Int
+  estudiante   Usuario @relation(fields: [estudianteId], references: [id])
+  tallerId     Int
+  taller       Taller  @relation(fields: [tallerId], references: [id])
+
+  @@unique([estudianteId, tallerId]) 
+}
+
+model Sesion {
+  id           Int           @id @default(autoincrement())
+  tallerId     Int
+  taller       Taller        @relation(fields: [tallerId], references: [id])
+  fecha        DateTime      @default(now()) @db.Date
+  bloque       BloqueHorario
+  
+  qrToken      String        @unique
+  validoHasta  DateTime      
+  
+  asistencias  Asistencia[]
+}
+
+model Asistencia {
+  id               Int      @id @default(autoincrement())
+  sesionId         Int
+  sesion           Sesion   @relation(fields: [sesionId], references: [id])
+  estudianteId     Int
+  estudiante       Usuario  @relation(fields: [estudianteId], references: [id])
+  notaSatisfaccion Int?   
+
+  fechaHora        DateTime @default(now())
+  estado           String   @default("Ausente") 
+  notaSatisfaccion Int?     
+
+  @@unique([sesionId, estudianteId])
+}

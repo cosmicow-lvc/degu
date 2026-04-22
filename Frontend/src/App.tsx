@@ -18,6 +18,7 @@ function App() {
       <Route path='/horario' element={<Horario />} />
       <Route path='/perfil' element={<Perfil />} />
       <Route path='/login' element={<Login />} />
+      <Route path='/inicio' element={<Inicio />} />
       <Route path="*" element={<div className="p-10 text-center text-red-500">Página no encontrada (Error 404)</div>} />
     </Routes>
   );

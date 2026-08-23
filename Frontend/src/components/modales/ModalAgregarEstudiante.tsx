@@ -3,7 +3,7 @@ import ExcelJS from 'exceljs';
 import { registrarUsuario, registrarEstudiantesBatch } from '../../services/estudiantes.service';
 import { obtenerTextoCelda, formatRut } from '../../utils/excel.utils';
 import { obtenerTalleresPorSemestre, type TallerApi } from '../../services/talleres.service';
-import { inscribirEstudianteEnTaller, inscribirEstudiantesBatch } from '../../services/inscripcion.service';
+import { inscribirEstudiantesBatch } from '../../services/inscripcion.service';
 import { obtenerSemestreActual } from '../../utils/semestre.utils';
 
 type EstudianteExcelRow = {
@@ -31,13 +31,16 @@ export const AgregarEstudiante = () => {
   const [correo, setCorreo] = useState('');
   const [carrera, setCarrera] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [tallerSeleccionado, setTallerSeleccionado] = useState<string>('');
+  // Ahora guardamos el nombre del taller, no el id
+  const [tallerNombreSeleccionado, setTallerNombreSeleccionado] = useState<string>('');
 
   const [talleresDisponibles, setTalleresDisponibles] = useState<TallerApi[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMensaje, setErrorMensaje] = useState<string | null>(null);
   const [exitoMensaje, setExitoMensaje] = useState<string | null>(null);
   const [filasPreview, setFilasPreview] = useState<EstudianteExcelRow[]>([]);
+
   const [mostrarPreview, setMostrarPreview] = useState(false);
   const [problemasImportacion, setProblemasImportacion] = useState<ProblemaImportacion[]>([]);
   const [mostrarProblemasImportacion, setMostrarProblemasImportacion] = useState(false);
@@ -59,6 +62,16 @@ export const AgregarEstudiante = () => {
     }
   };
 
+  // Nombres únicos para el select, ordenados alfabéticamente
+  const nombresUnicos = Array.from(
+    new Set(talleresDisponibles.map((t) => t.nombre))
+  ).sort();
+
+  // Todos los ids que corresponden al nombre seleccionado
+  const idsDelTallerSeleccionado = talleresDisponibles
+    .filter((t) => t.nombre === tallerNombreSeleccionado)
+    .map((t) => t.id);
+
   const resetForm = () => {
     setNombre('');
     setApellido('');
@@ -66,7 +79,7 @@ export const AgregarEstudiante = () => {
     setCorreo('');
     setCarrera('');
     setTelefono('');
-    setTallerSeleccionado('');
+    setTallerNombreSeleccionado('');
     setErrorMensaje(null);
     setProblemasImportacion([]);
     setMostrarProblemasImportacion(false);
@@ -91,8 +104,11 @@ export const AgregarEstudiante = () => {
 
       const estudianteId = response.usuario.id;
 
-      if (tallerSeleccionado) {
-        await inscribirEstudianteEnTaller(estudianteId, Number(tallerSeleccionado));
+      // Si eligió un taller, inscribir en todos los bloques de ese nombre via batch
+      if (tallerNombreSeleccionado && idsDelTallerSeleccionado.length > 0) {
+        await inscribirEstudiantesBatch(
+          idsDelTallerSeleccionado.map((tallerId) => ({ estudianteId, tallerId }))
+        );
       }
 
       setExitoMensaje('Estudiante agregado e inscrito exitosamente.');
@@ -126,7 +142,7 @@ export const AgregarEstudiante = () => {
         if (rowNumber === 1) return;
 
         const nombreCompleto = obtenerTextoCelda(row.getCell(2).value).trim();
-        if (!nombreCompleto) return; // Skip empty rows
+        if (!nombreCompleto) return;
 
         const partesNombre = nombreCompleto.split(/\s+/);
         const nombre = partesNombre[0] || "";
@@ -134,21 +150,12 @@ export const AgregarEstudiante = () => {
 
         const rut = obtenerTextoCelda(row.getCell(3).value).trim();
         const carrera = obtenerTextoCelda(row.getCell(4).value).trim();
-        // Column 5 is Año de ingreso (ignored)
         const correo = obtenerTextoCelda(row.getCell(6).value).trim().toLowerCase();
         const telefono = obtenerTextoCelda(row.getCell(7).value).trim();
         const talleresTexto = obtenerTextoCelda(row.getCell(8).value).trim();
 
         if (nombreCompleto && rut && correo) {
-          filas.push({
-            nombre,
-            apellido,
-            rut,
-            carrera,
-            correo,
-            telefono,
-            talleresTexto
-          });
+          filas.push({ nombre, apellido, rut, carrera, correo, telefono, talleresTexto });
         }
       });
 
@@ -171,55 +178,62 @@ export const AgregarEstudiante = () => {
       setProblemasImportacion([]);
       setMostrarProblemasImportacion(false);
 
-      // 1 query
       const todosLosTalleres = await obtenerTalleresPorSemestre(semestreActual);
-      const mapTalleres = new Map<string, TallerApi>();
-      todosLosTalleres.forEach(t => mapTalleres.set(t.nombre.trim().toLowerCase(), t));
 
-      // 1 request al backend (internamente: 1-2 queries)
+      // Mapa nombre → todos los ids (para inscribir en todos los bloques del grupo)
+      const idsPorNombre = new Map<string, number[]>();
+      todosLosTalleres.forEach((t) => {
+        const clave = t.nombre.trim().toLowerCase();
+        const prev = idsPorNombre.get(clave) ?? [];
+        prev.push(t.id);
+        idsPorNombre.set(clave, prev);
+      });
+
+      const nombrePorTallerId = new Map(todosLosTalleres.map((t) => [t.id, t.nombre]));
+
       const resCreacion = await registrarEstudiantesBatch(
-        filasPreview.map(fila => ({
+        filasPreview.map((fila) => ({
           nombre: fila.nombre,
           apellido: fila.apellido,
           rut: formatRut(fila.rut),
           correo: fila.correo,
           carrera: fila.carrera,
           telefono: fila.telefono,
-          rol: 'Estudiante'
+          rol: 'Estudiante',
         }))
       );
-    
+
       const problemas: ProblemaImportacion[] = [];
-    
-      // Estudiantes que no se pudieron crear (rut/correo duplicado)
-      resCreacion.errores.forEach(err => {
+
+      resCreacion.errores.forEach((err) => {
         problemas.push({
           estudiante: `${err.input.nombre} ${err.input.apellido}`,
           taller: '—',
           motivo: err.message,
         });
       });
-    
-      // Emparejar por RUT, no por índice (createManyAndReturn no garantiza orden)
-      const porRut = new Map(resCreacion.creados.map(e => [e.rut, e.id]));
-      // Mapas auxiliares para poder reconstruir nombres al mostrar los problemas de inscripción
-      const nombrePorEstudianteId = new Map(resCreacion.creados.map(e => [e.id, `${e.nombre} ${e.apellido}`]));
-      const nombrePorTallerId = new Map(todosLosTalleres.map(t => [t.id, t.nombre]));
-    
+
+      const porRut = new Map(resCreacion.creados.map((e) => [e.rut, e.id]));
+      const nombrePorEstudianteId = new Map(
+        resCreacion.creados.map((e) => [e.id, `${e.nombre} ${e.apellido}`])
+      );
+
+      // Construir pares: un estudiante → todos los tallerId de cada nombre que tiene en el Excel
       const pares: { estudianteId: number; tallerId: number }[] = [];
-      filasPreview.forEach(fila => {
+
+      filasPreview.forEach((fila) => {
         const rutFormateado = formatRut(fila.rut);
         const estudianteId = porRut.get(rutFormateado);
-        if (!estudianteId) return; // ya quedó reportado arriba en resCreacion.errores
-        if (!fila.talleresTexto) return;
-        fila.talleresTexto.split(',').forEach(tBruto => {
-          const nombreTallerLimpio = tBruto.split('(')[0].trim().toLowerCase();
-          if (!nombreTallerLimpio) return;
-          const taller = mapTalleres.get(nombreTallerLimpio);
-          if (taller) {
-            pares.push({ estudianteId, tallerId: taller.id });
+        if (!estudianteId || !fila.talleresTexto) return;
+
+        fila.talleresTexto.split(',').forEach((tBruto) => {
+          const nombreLimpio = tBruto.split('(')[0].trim().toLowerCase();
+          if (!nombreLimpio) return;
+
+          const ids = idsPorNombre.get(nombreLimpio);
+          if (ids && ids.length > 0) {
+            ids.forEach((tallerId) => pares.push({ estudianteId, tallerId }));
           } else {
-            // El nombre del taller en el Excel no coincide con ninguno del semestre actual
             problemas.push({
               estudiante: `${fila.nombre} ${fila.apellido}`,
               taller: tBruto.trim(),
@@ -228,34 +242,32 @@ export const AgregarEstudiante = () => {
           }
         });
       });
-    
-      // 1 request al backend (internamente: 4 queries)
+
       const resInscripcion = await inscribirEstudiantesBatch(pares);
-    
-      // Reconciliar los resultados de inscripción con nombres, para los que no quedaron "inscrito"
+
       resInscripcion.resultados
-        .filter(r => r.status !== 'inscrito')
-        .forEach(r => {
+        .filter((r) => r.status !== 'inscrito')
+        .forEach((r) => {
           problemas.push({
             estudiante: nombrePorEstudianteId.get(r.estudianteId) ?? `ID ${r.estudianteId}`,
             taller: nombrePorTallerId.get(r.tallerId) ?? `ID ${r.tallerId}`,
-            motivo: r.status === 'ya_inscrito'
-              ? 'El estudiante ya estaba inscrito en ese taller'
-              : 'El taller no existe (fue eliminado o cambió de semestre)',
+            motivo:
+              r.status === 'ya_inscrito'
+                ? 'El estudiante ya estaba inscrito en ese taller'
+                : 'El taller no existe (fue eliminado o cambió de semestre)',
           });
         });
-      
+
       setProblemasImportacion(problemas);
       setMostrarProblemasImportacion(problemas.length > 0);
 
       setExitoMensaje(
         `Se importaron ${resCreacion.creados.length} estudiantes correctamente` +
-        (problemas.length > 0 ? ` (${problemas.length} incidencias, ver detalle abajo).` : '.')
+          (problemas.length > 0 ? ` (${problemas.length} incidencias, ver detalle abajo).` : '.')
       );
       setMostrarPreview(false);
       setFilasPreview([]);
-    
-      // Solo cerrar el modal automáticamente si no hubo incidencias que revisar
+
       if (problemas.length === 0) {
         setTimeout(() => {
           setIsModalOpen(false);
@@ -269,10 +281,7 @@ export const AgregarEstudiante = () => {
     }
   };
 
-  const cerrarProblemasImportacion = () => {
-    setMostrarProblemasImportacion(false);
-  };
-
+  const cerrarProblemasImportacion = () => setMostrarProblemasImportacion(false);
   const handleCancelarImportacion = () => {
     setMostrarPreview(false);
     setFilasPreview([]);
@@ -319,9 +328,7 @@ export const AgregarEstudiante = () => {
               <form onSubmit={handleAgregarEstudiante} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
                     <input
                       type="text"
                       required
@@ -332,9 +339,7 @@ export const AgregarEstudiante = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Apellido
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
                     <input
                       type="text"
                       required
@@ -345,9 +350,7 @@ export const AgregarEstudiante = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      RUT
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">RUT</label>
                     <input
                       type="text"
                       required
@@ -359,9 +362,7 @@ export const AgregarEstudiante = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Correo Institucional
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Correo Institucional</label>
                     <input
                       type="email"
                       required
@@ -373,9 +374,7 @@ export const AgregarEstudiante = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Carrera
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Carrera</label>
                     <input
                       type="text"
                       placeholder="Ej: Ingeniería Civil"
@@ -386,9 +385,7 @@ export const AgregarEstudiante = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Teléfono
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
                     <input
                       type="text"
                       placeholder="Ej: +56912345678"
@@ -405,25 +402,27 @@ export const AgregarEstudiante = () => {
                   </label>
                   <select
                     className="w-full border border-gray-300 rounded-md p-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                    value={tallerSeleccionado}
-                    onChange={(e) => setTallerSeleccionado(e.target.value)}
+                    value={tallerNombreSeleccionado}
+                    onChange={(e) => setTallerNombreSeleccionado(e.target.value)}
                   >
                     <option value="">-- No inscribir en ningún taller por ahora --</option>
-                    {talleresDisponibles.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.nombre} ({t.lugar} - {t.bloque})
+                    {nombresUnicos.map((nombre) => (
+                      <option key={nombre} value={nombre}>
+                        {nombre}
                       </option>
                     ))}
                   </select>
+                  {tallerNombreSeleccionado && idsDelTallerSeleccionado.length > 1 && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      El estudiante quedará inscrito en los {idsDelTallerSeleccionado.length} bloques de este taller.
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      resetForm();
-                    }}
+                    onClick={() => { setIsModalOpen(false); resetForm(); }}
                     className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
                     disabled={isLoading}
                   >
@@ -441,6 +440,7 @@ export const AgregarEstudiante = () => {
               </form>
             </div>
           </div>
+
           <div className="flex flex-col md:flex-row gap-4 max-w-2xl w-full my-8 max-h-[calc(100vh-2rem)] min-h-0">
             {/* Importación desde Excel */}
             <div className="bg-white rounded-lg shadow-xl flex-1 p-6 flex flex-col min-h-0 overflow-hidden">
@@ -526,6 +526,7 @@ export const AgregarEstudiante = () => {
                   </div>
                 </div>
               )}
+
               {mostrarProblemasImportacion && problemasImportacion.length > 0 && (
                 <div className="mt-4 border border-yellow-300 bg-yellow-50 rounded p-3 max-h-64 overflow-auto">
                   <div className="flex items-center justify-between gap-3 mb-2">

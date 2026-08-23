@@ -2,6 +2,7 @@ export interface ResumenAsistenciaEstudianteItem {
   tallerId: number;
   nombre: string;
   semestre: string;
+  bloque: string;
   totalSesiones: number;
   asistencias: number;
   porcentaje: number;

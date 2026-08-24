@@ -196,7 +196,7 @@ export default function ModalAsistencia({
                     className={`asistencia-card ${presente ? "presente" : "ausente"}`}
                   >
                     <div className="asistencia-card-info">
-                      <strong>{estudiante.nombre}</strong>
+                      <strong>{estudiante.nombre} {estudiante.apellido}</strong>
                       <span>{estudiante.rut}</span>
                     </div>
 
@@ -205,7 +205,7 @@ export default function ModalAsistencia({
                         {presente ? "Presente" : "Ausente"}
                       </span>
 
-                      <label className="asistencia-switch" aria-label={`Cambiar asistencia de ${estudiante.nombre}`}>
+                      <label className="asistencia-switch" aria-label={`Cambiar asistencia de ${estudiante.nombre} ${estudiante.apellido}`}>
                         <input
                           type="checkbox"
                           checked={presente}

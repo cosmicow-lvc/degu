@@ -3,10 +3,28 @@ import crypto from 'crypto';
 
 export class SesionService {
   
-  // ✅ CAMBIO: 'bloque' ahora es explícitamente 'number'
   async crear(tallerId: number, bloque: number, minutos: number) {
     if (typeof bloque !== 'number') {
       throw new Error("El bloque debe ser un número entero.");
+    }
+
+    const ahora = new Date();
+
+    const sesionVigente = await prisma.sesion.findFirst({
+      where: {
+        tallerId,
+        bloque,
+        validoHasta: {
+          gt: ahora,
+        },
+      },
+      orderBy: {
+        validoHasta: 'desc',
+      },
+    });
+
+    if (sesionVigente) {
+      return sesionVigente;
     }
 
     const token = crypto.randomBytes(16).toString('hex');
@@ -16,7 +34,7 @@ export class SesionService {
     return await prisma.sesion.create({
       data: {
         tallerId,
-        bloque, // Ahora TypeScript te obligará a pasar un número
+        bloque,
         qrToken: token,
         validoHasta: fechaExpiracion,
         fecha: new Date()
@@ -56,21 +74,21 @@ export class SesionService {
     });
   }
   async obtenerOCrearDeHoy(tallerId: number, bloque: number, minutos: number) {
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const manana = new Date(hoy);
-  manana.setDate(manana.getDate() + 1);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const manana = new Date(hoy);
+    manana.setDate(manana.getDate() + 1);
 
-  const existente = await prisma.sesion.findFirst({
-    where: {
-      tallerId,
-      bloque,
-      fecha: { gte: hoy, lt: manana }
-    }
-  });
+    const existente = await prisma.sesion.findFirst({
+      where: {
+        tallerId,
+        bloque,
+        fecha: { gte: hoy, lt: manana }
+      }
+    });
 
-  if (existente) return existente;
+    if (existente) return existente;
 
-  return this.crear(tallerId, bloque, minutos);
-}
+    return this.crear(tallerId, bloque, minutos);
+  }
 }

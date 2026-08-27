@@ -291,7 +291,7 @@ export class AsistenciaService {
       where: { estudianteId },
       select: {
         tallerId: true,
-        taller: { select: { id: true, nombre: true, semestre: true } },
+        taller: { select: { id: true, nombre: true, semestre: true, bloque: true } },
       },
     });
 
@@ -356,6 +356,7 @@ export class AsistenciaService {
         tallerId,
         nombre: taller.nombre,
         semestre: taller.semestre,
+        bloque: taller.bloque,
         totalSesiones,
         asistencias,
         porcentaje,

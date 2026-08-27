@@ -12,6 +12,7 @@ services:
       POSTGRES_DB: app_db
     ports:
       - "5432:5432"
+      
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,6 +34,7 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+      - "51212:51212"
     environment:
       DATABASE_URL: "postgresql://postgres:password123@database:5432/app_db"
     volumes:

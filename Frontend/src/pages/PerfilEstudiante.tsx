@@ -8,7 +8,7 @@ import {
 import { exportarPerfilEstudianteExcel } from "../utils/excel.utils"
 import { useAuth } from "../context/AuthContext"
 import { obtenerTalleresPorSemestre, type TallerApi } from "../services/talleres.service"
-import { inscribirEstudianteEnTaller } from "../services/inscripcion.service"
+import { inscribirEstudiantesBatch } from "../services/inscripcion.service"
 import { obtenerSemestreActual } from "../utils/semestre.utils"
 
 
@@ -31,6 +31,7 @@ interface ResumenTaller {
   codigo: string
   nombre: string
   semestre: string
+  bloque: string
   asistencia: number
   estado: "Calificado" | "No califica"
 }
@@ -58,6 +59,7 @@ function mapearHistorialDesdeResumen(resumen: ResumenAsistenciaEstudianteItem[])
     codigo: `TALL-${String(item.tallerId).padStart(3, "0")}`,
     nombre: item.nombre,
     semestre: item.semestre,
+    bloque: item.bloque,
     asistencia: item.porcentaje,
     estado: item.porcentaje >= 80 ? "Calificado" : "No califica",
   }))
@@ -101,22 +103,36 @@ export default function Perfil({ estudiante, historialTalleres }: PerfilProps): 
     }
   }, [user])
 
-  const talleresParaElegir = useMemo(() => {
-    const idsInscritos = new Set(historialFinal.map(t => t.id))
-    return talleresDisponibles.filter(t => !idsInscritos.has(t.id))
-  }, [talleresDisponibles, historialFinal])
+  // Nombres únicos ya no inscritos (comparando por nombre contra historial)
+  const nombresInscritos = useMemo(
+    () => new Set(historialFinal.map((t) => t.nombre)),
+    [historialFinal]
+  )
+
+  const nombresParaElegir = useMemo(() => {
+    const todosLosNombres = Array.from(new Set(talleresDisponibles.map((t) => t.nombre))).sort()
+    return todosLosNombres.filter((n) => !nombresInscritos.has(n))
+  }, [talleresDisponibles, nombresInscritos])
+
+  // IDs de todos los bloques del nombre elegido
+  const idsDelTallerElegido = useMemo(
+    () => talleresDisponibles.filter((t) => t.nombre === tallerParaInscribir).map((t) => t.id),
+    [talleresDisponibles, tallerParaInscribir]
+  )
 
   const handleInscribir = async () => {
-    if (!estudianteFinal?.id || !tallerParaInscribir) return
+    if (!estudianteFinal?.id || !tallerParaInscribir || idsDelTallerElegido.length === 0) return
     setCargandoInscripcion(true)
     setErrorInscripcion(null)
     setExitoInscripcion(null)
 
     try {
-      await inscribirEstudianteEnTaller(estudianteFinal.id, Number(tallerParaInscribir))
+      await inscribirEstudiantesBatch(
+        idsDelTallerElegido.map((tallerId) => ({ estudianteId: estudianteFinal.id!, tallerId }))
+      )
       setExitoInscripcion('Estudiante inscrito exitosamente.')
       setTallerParaInscribir('')
-      setTriggerRecarga(prev => prev + 1)
+      setTriggerRecarga((prev) => prev + 1)
       setTimeout(() => setExitoInscripcion(null), 3000)
     } catch (err: any) {
       setErrorInscripcion(err.message || 'Error al inscribir estudiante.')
@@ -323,12 +339,18 @@ export default function Perfil({ estudiante, historialTalleres }: PerfilProps): 
                           onChange={(e) => setTallerParaInscribir(e.target.value)}
                         >
                           <option value="">-- Seleccionar Taller --</option>
-                          {talleresParaElegir.map(t => (
-                            <option key={t.id} value={t.id}>
-                              {t.nombre} ({t.lugar} - {t.bloque})
+                          {nombresParaElegir.map((nombre) => (
+                            <option key={nombre} value={nombre}>
+                              {nombre}
                             </option>
                           ))}
                         </select>
+
+                        {tallerParaInscribir && idsDelTallerElegido.length > 1 && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Se inscribirá en los {idsDelTallerElegido.length} bloques de este taller.
+                            </p>
+                          )}
                         <button
                           onClick={handleInscribir}
                           disabled={!tallerParaInscribir || cargandoInscripcion}
@@ -386,7 +408,7 @@ export default function Perfil({ estudiante, historialTalleres }: PerfilProps): 
                             </span>
                           </div>
                           <h3 className="mt-2 text-base font-semibold text-[#2f363d]">{taller.nombre}</h3>
-                          <p className="mt-1 text-sm text-[#5a636d]">Semestre {taller.semestre}</p>
+                          <p className="mt-1 text-sm text-[#5a636d]">Semestre {taller.semestre} · Bloque {taller.bloque}</p>
                         </div>
 
                         <div className="min-w-40">

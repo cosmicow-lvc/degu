@@ -13,7 +13,7 @@ import { PerfilAdmin } from './components/perfilAdmin';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-600 via-yellow-400 to-green-500">
+    <div className="min-h-screen">
       {/* 1. Envolvemos toda la aplicación con el proveedor de autenticación */}
       <AuthProvider>
         <Routes>  

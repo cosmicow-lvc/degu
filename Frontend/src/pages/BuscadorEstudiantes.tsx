@@ -77,7 +77,7 @@ export default function BuscadorEstudiantes(): ReactElement {
   const hayBusqueda = query.trim().length > 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-600 via-yellow-400 to-green-500 flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="min-h-screen px-4 py-8 sm:px-6">
         <section className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-6xl flex-col">

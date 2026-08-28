@@ -18,16 +18,13 @@ export default function Inicio(): ReactElement {
         <p className="text-gray-700 mb-8">
           Bienvenido al panel principal de Galpón Cultural.
         </p>
-
         {user?.rol === 'Administrador' && (
-          <section className="w-full mb-8">
+          <section className="mb-8">
             <PanelDirectivo />
           </section>
         )}
-
-        <section className="w-full">
           <Horario modo="inicio" />
-        </section>
+
       </main>
     </div>
   )

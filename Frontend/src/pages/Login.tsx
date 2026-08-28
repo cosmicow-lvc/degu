@@ -127,22 +127,6 @@ export default function Login(): JSX.Element {
             />
           </div>
         </div>
-
-        <div className="mt-8 grid grid-cols-2 text-sm text-slate-400">
-          <p className="text-left">
-            ¿Olvidaste tu contraseña?{' '}
-            <a className="text-slate-900 font-medium hover:underline cursor-pointer">
-              Restaurar
-            </a>
-          </p>
-
-          <p className="text-right">
-            ¿No tienes cuenta?{' '}
-            <a href="/registro" className="text-slate-900 font-medium hover:underline">
-              Registrarte
-            </a>
-          </p>
-        </div>
       </section>
     </main>
   )

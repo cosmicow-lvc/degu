@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { autenticarUsuario, registrarUsuario, validarToken, autenticarConGoogle } from '../services/auth.service';
+import { autenticarUsuario, registrarUsuario, validarToken, autenticarConGoogle, restablecerContrasena, solicitarRecuperacion } from '../services/auth.service';
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -66,5 +66,41 @@ export const verificarSesion = async (req: Request, res: Response): Promise<void
     res.status(200).json(usuario);
   } catch (error: any) {
     res.status(401).json({ error: 'Sesión inválida o expirada' });
+  }
+};
+export const forgotPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { correo } = req.body;
+
+    const token = await solicitarRecuperacion(correo);
+
+    res.status(200).json({
+      mensaje:
+        "Si el correo es válido, se generó un enlace de recuperación.",
+      token // Temporal para desarrollo
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+export const resetPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { token, nuevaPassword } = req.body;
+
+    await restablecerContrasena(token, nuevaPassword);
+
+    res.status(200).json({
+      mensaje: "Contraseña actualizada correctamente"
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      error: error.message
+    });
   }
 };

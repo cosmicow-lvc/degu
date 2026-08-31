@@ -1,7 +1,14 @@
 // src/services/authService.ts
 
 const baseUrl = import.meta.env.VITE_API_URL
+export interface SolicitarRecuperacionRequest {
+  correo: string
+}
 
+export interface SolicitarRecuperacionResponse {
+  mensaje: string
+  token?: string
+}
 export interface LoginResponse {
   token: string
   [key: string]: any
@@ -50,4 +57,46 @@ export async function loginConGoogle(credentialToken: string): Promise<LoginResp
   }
 
   return data as LoginResponse
+}
+// reemplaza la función solicitarRecuperacion existente y agrega restablecerContrasena
+
+export const solicitarRecuperacion = async (
+  correo: string
+): Promise<SolicitarRecuperacionResponse> => {
+  const response = await fetch(`${baseUrl}/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ correo }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.error || "No se pudo solicitar la recuperación")
+  }
+
+  return data
+}
+
+export interface RestablecerContrasenaResponse {
+  mensaje: string
+}
+
+export const restablecerContrasena = async (
+  token: string,
+  nuevaPassword: string
+): Promise<RestablecerContrasenaResponse> => {
+  const response = await fetch(`${baseUrl}/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, nuevaPassword }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.error || "No se pudo restablecer la contraseña")
+  }
+
+  return data
 }

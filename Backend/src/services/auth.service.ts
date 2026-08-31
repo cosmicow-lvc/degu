@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt'; 
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -141,4 +142,57 @@ export const autenticarConGoogle = async (tokenGoogle: string) => {
   );
 
   return token;
+  
+};
+export const solicitarRecuperacion = async (correo: string) => {
+  const usuario = await prisma.usuario.findUnique({
+    where: { correo }
+  });
+
+  // No revelar si el correo existe
+  if (!usuario || usuario.rol !== "Administrador") {
+    return;
+  }
+
+  const token = jwt.sign(
+    {
+      type: "password-reset",
+      userId: usuario.id
+    },
+    JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  return token;
+};
+export const restablecerContrasena = async (
+  token: string,
+  nuevaPassword: string
+) => {
+  const payload = jwt.verify(token, JWT_SECRET) as JwtPayload & {
+    type: string;
+    userId: number;
+  };
+
+  if (payload.type !== "password-reset") {
+    throw new Error("Token inválido");
+  }
+
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: payload.userId }
+  });
+
+  if (!usuario) {
+    throw new Error("Usuario no encontrado");
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(nuevaPassword, salt);
+
+  await prisma.usuario.update({
+    where: { id: usuario.id },
+    data: {
+      password: passwordHash
+    }
+  });
 };

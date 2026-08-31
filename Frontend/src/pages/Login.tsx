@@ -1,9 +1,9 @@
 import { useState, type JSX } from "react"
-import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { GoogleLogin } from '@react-oauth/google'
 import { jwtDecode } from 'jwt-decode'
 import { loginConCorreo, loginConGoogle } from "../services/auth.service"
+import { Link, useNavigate } from "react-router-dom"
 
 export default function Login(): JSX.Element {
   const [correo, setCorreo] = useState("")
@@ -126,6 +126,18 @@ export default function Login(): JSX.Element {
               text="signin_with"
             />
           </div>
+        </div>
+
+        <div className="mt-8 grid grid-cols-2 text-sm text-slate-400">
+          <p className="text-left">
+            ¿Olvidaste tu contraseña?{" "}
+            <Link
+              to= "/restaurar-contrasena"
+              className="text-slate-900 font-medium hover:underline"
+            >
+              Restaurar
+            </Link>
+          </p>
         </div>
       </section>
     </main>

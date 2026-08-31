@@ -1,6 +1,5 @@
 import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt'; 
-import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 

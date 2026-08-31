@@ -6,7 +6,7 @@ export default function Horario(): ReactElement {
   return (
     
   
-    <div className="min-h-screen bg-gradient-to-r from-blue-600 via-yellow-400 to-green-500 flex flex-col">
+    <div className="min-h-screen  ">
       <Navbar />
       <Schedule />
     </div>

@@ -32,20 +32,16 @@ rgba(143, 151, 159, 0.08)
     --label-col: 82px;
     display: grid;
     grid-template-columns: var(--label-col) repeat(6, minmax(110px, 1fr));
-    gap: 8px;
-    width: min(100%, 1040px);
-    padding: 14px;
+    width: min(100%, 1088px);
     border-radius: 16px;
     border: 1px solid var(--border-horario);
     background: linear-gradient(180deg, var(--color-fondo), var(--color-fondo-fade));
-    box-shadow: var(--shadow);
     box-sizing: border-box;
+    overflow: hidden
 }
 
 .celda {
     min-height: 64px;
-    border-radius: 10px;
-    border: 1px solid var(--border-horario);
     display: grid;
     place-items: center;
     box-sizing: border-box;
@@ -87,11 +83,11 @@ rgba(143, 151, 159, 0.08)
 
 .contenido {
     padding: 6px;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    border: 1px solid var(--color-acento-esquina);
+    
 }
 
 .contenido:hover {
-    border-color: var(--accent-border-horario);
     box-shadow: 0 10px 18px -14px rgba(31, 35, 40, 0.24);
     transform: translateY(-1px) scale(1.004);
 }
@@ -124,7 +120,6 @@ rgba(143, 151, 159, 0.08)
 
 .activa {
     border-color: var(--accent-border-horario);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-border-horario) 35%, transparent);
 }
 
 .panel-detalle {
@@ -208,9 +203,8 @@ rgba(143, 151, 159, 0.08)
 @media (max-width: 920px) {
     .malla {
         --label-col: 64px;
-        gap: 6px;
-        padding: 10px;
         overflow-x: auto;
+        overflow-y: hidden;
     }
 
     .celda {

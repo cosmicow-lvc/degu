@@ -10,6 +10,20 @@ interface Props {
   moverTaller?: (origen: TallerUI, nuevoDia: number, nuevoBloque: number) => void
 }
 
+const coloresPorNombre = new Map<string, string>()
+
+const obtenerColorPorNombre = (nombre: string) => {
+  const colorExistente = coloresPorNombre.get(nombre)
+  if (colorExistente) return colorExistente
+
+  const hash = Array.from(nombre).reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  const hue = hash % 360
+  const pastel = `hsl(${hue} 70% 82%)`
+
+  coloresPorNombre.set(nombre, pastel)
+  return pastel
+}
+
 export default function HorarioGrid({
   dias,
   bloques,
@@ -69,7 +83,6 @@ export default function HorarioGrid({
 
                   const origen: TallerUI = JSON.parse(data)
 
-                  // 👇 LOG TEMPORAL DE DIAGNÓSTICO
                   console.log("🔴 drop origen:", { id: origen.id, nombre: origen.nombre, diaOrigen: origen.dia, bloqueOrigen: origen.bloque })
 
                   if (origen.dia === diaNum && origen.bloque === bloqueNum) return
@@ -83,10 +96,12 @@ export default function HorarioGrid({
                       key={`${t.nombre}-${idx}`}
                       className="contenido-item"
                       draggable={modoEdicion}
+                      style={{
+                        backgroundColor: obtenerColorPorNombre(t.nombre),
+                      }}
                       onDragStart={(event) => {
                         if (!modoEdicion) return
 
-                        // 👇 LOG TEMPORAL DE DIAGNÓSTICO
                         console.log("🟢 dragstart:", { id: t.id, nombre: t.nombre, dia: t.dia, bloque: t.bloque })
 
                         event.dataTransfer.setData("text/plain", JSON.stringify(t))

@@ -108,7 +108,7 @@ const ListaTalleres: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gray-100 p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
             <select
@@ -204,7 +204,7 @@ const ListaTalleres: React.FC = () => {
       </div>
 
       {cargando ? (
-        <div className="bg-white shadow-md rounded-lg p-6 text-gray-600">
+        <div className="bg-white rounded-lg p-6 text-gray-600">
           Cargando resumen de asistencia...
         </div>
       ) : error ? (
@@ -212,7 +212,7 @@ const ListaTalleres: React.FC = () => {
           {error}
         </div>
       ) : (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="bg-white rounded-lg overflow-hidden">
           {talleresOrdenados.length === 0 ? (
             <div className="p-6 text-gray-600">No hay talleres para los filtros seleccionados.</div>
           ) : (

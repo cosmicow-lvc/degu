@@ -81,7 +81,7 @@ export default function BuscadorEstudiantes(): ReactElement {
       <Navbar />
       <main className="min-h-screen px-4 py-8 sm:px-6">
         <section className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-6xl flex-col">
-          <header className="mb-6 rounded-2xl border border-[#dfe3e7] bg-white p-6 shadow-[0_8px_22px_-18px_rgba(31,35,40,0.28)]">
+          <header className="mb-6 rounded-2xl bg-white p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2f363d]">
               Buscador de estudiantes
             </p>
@@ -105,7 +105,7 @@ export default function BuscadorEstudiantes(): ReactElement {
                   key={estudiante.id}
                   type="button"
                   onClick={() => irAlPerfil(estudiante)}
-                  className="rounded-xl border border-[#dfe3e7] bg-[#f8fafc] p-4 text-left transition hover:border-[#bfc8d1] hover:bg-white"
+                  className="rounded-xl border border-[#f8fafc] bg-[#f8fafc] p-4 text-left transition hover:border-[#bfc8d1]"
                 >
                   <p className="font-semibold text-[#2f363d]">
                     {estudiante.nombre} {estudiante.apellido ?? ""}
@@ -118,7 +118,7 @@ export default function BuscadorEstudiantes(): ReactElement {
           </div>
 
           {hayBusqueda && (
-            <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-[#dfe3e7] bg-white px-4 py-3 shadow-[0_8px_22px_-18px_rgba(31,35,40,0.28)] sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-8 flex flex-col gap-3 rounded-2xl bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-[#5a636d]">
                 {totalResultados > 0
                   ? `Mostrando ${resultados.length} de ${totalResultados} estudiantes`

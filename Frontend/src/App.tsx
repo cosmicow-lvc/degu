@@ -10,6 +10,7 @@ import { PublicRoute } from './components/PublicRoute';
 import BuscadorEstudiantes from './pages/BuscadorEstudiantes';
 import Perfil from './pages/PerfilEstudiante';
 import { PerfilAdmin } from './components/perfilAdmin';
+import RestaurarContrasena from './pages/RestaurarContraseña';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           {/* ======================================= */}
           <Route element={<PublicRoute />}>
             <Route path='/' element={<Login />} />
+            <Route path="/restaurar-contrasena" element={<RestaurarContrasena />} />
           </Route>
 
           <Route path='/formularioAsistencia' element={<FormularioAsistencia />} />

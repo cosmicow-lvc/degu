@@ -136,12 +136,6 @@ export default function Login(): JSX.Element {
             </a>
           </p>
 
-          <p className="text-right">
-            ¿No tienes cuenta?{' '}
-            <a href="/registro" className="text-slate-900 font-medium hover:underline">
-              Registrarte
-            </a>
-          </p>
         </div>
       </section>
     </main>
